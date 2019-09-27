@@ -1,0 +1,31 @@
+---
+title: "p8105_hw2_oew2106"
+author: "Olivia Wagner"
+date: "9/27/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+```
+
+## Problem 1 ##
+```{r problem 1, Data set 1}
+
+# Read in Data Set #
+Trash_Wheel_Data = readxl::read_excel('./Problem 1/HealthyHarborWaterWheelTotals2018-7-28.xlsx', col_names = TRUE, na = '', range = 'A2:N336')
+
+# alter the names of the columns to snake format#
+Trash_Wheel_Data = janitor::clean_names(Trash_Wheel_Data)
+
+
+# filter out the results without dumpster information, and round the number of sports balls found #
+Trash_Wheel_Data = Trash_Wheel_Data %>% filter(!is.na(dumpster)) %>% mutate(sports_balls = as.integer(sports_balls)) 
+
+```
+
+
+```{r problem 1, Data set 1}
+
+
+```
