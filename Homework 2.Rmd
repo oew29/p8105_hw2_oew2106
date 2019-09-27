@@ -25,7 +25,25 @@ Trash_Wheel_Data = Trash_Wheel_Data %>% filter(!is.na(dumpster)) %>% mutate(spor
 ```
 
 
-```{r problem 1, Data set 1}
+```{r problem 1, Data set 2}
+# Extract 2017/2018 Data #
+precipitation_2018 = readxl::read_excel('./Problem 1/2018_Precipitation.xlsx', sheet = 3, col_names = TRUE, na = '', range = 'A2:B14') 
 
+precipitation_2017 = readxl::read_excel('./Problem 1/2018_Precipitation.xlsx', sheet = 4, col_names = TRUE, na = '', range = 'A2:B14')
+
+# Alter Data Sets #
+precipitation_2018 = precipitation_2018 %>% mutate(year = '2018') %>% filter(!is.na(Total))
+
+precipitation_2017 = precipitation_2017 %>% mutate(year = '2017') %>% filter(!is.na(Total))
+
+# Combine Data Sets #
+precipitation_data = rbind(precipitation_2018, precipitation_2017)
+
+# Alter the Month from numerical to character representation #
+precipitation_data = precipitation_data %>% mutate(Month = month.name[Month]) %>% print()
 
 ```
+
+
+
+
