@@ -101,11 +101,30 @@ total_538_data = merge(pol_snp_data, unemployment_data, by = c('year', 'month'))
 name_data = read_csv('./Problem 3/Popular_Baby_Names.csv') 
 name_data = janitor::clean_names(name_data)
 
-print(name_data)
+
 # Alter Ethnicity category to streamline formatting #
 name_data = name_data %>% mutate(ethnicity = replace(ethnicity, ethnicity == 'ASIAN AND PACI', 'ASIAN AND PACIFIC ISLANDER')) %>% mutate(ethnicity = replace(ethnicity, ethnicity == 'BLACK NON HISP', 'BLACK NON HISPANIC')) %>% mutate(ethnicity = replace(ethnicity, ethnicity == 'WHITE NON HISP', 'WHITE NON HISPANIC'))
 
 # Alter the Name cateogry to ensure the same formatting #
 
-name_data = name_data %>% mutate(childs_first_name = tolower(childs_first_name)) %>% print()
+name_data = name_data %>% mutate(childs_first_name = tolower(childs_first_name)) 
+name_data = distinct(name_data) 
+name_data = name_data %>% group_by(year_of_birth, gender, ethnicity, childs_first_name, rank) %>% summarize(count = sum(count)) %>% 
+  arrange(desc(year_of_birth),ethnicity, gender, desc(count))
+
+# Olivia name table #
+
+olivia_name = name_data %>% filter(childs_first_name == 'olivia')
+
+olivia_pop_over_time = spread(olivia_name, key = 'year_of_birth', value = 'rank', fill = 0) %>% group_by(ethnicity) %>% summarize(`2011` = sum(`2011`), `2012` = sum(`2012`), `2013` = sum(`2013`), `2014` = sum(`2014`), `2015` = sum(`2015`), `2016` = sum(`2016`)) 
+
+olivia_name_table = knitr::kable(olivia_pop_over_time) 
+
+# Jayden name table #
+
+jayden_name = name_data %>% filter(childs_first_name == 'jayden') 
+
+jayden_pop_over_time = spread(jayden_name, key = 'year_of_birth', value = 'rank', fill = 0) %>% group_by(ethnicity) %>% summarize(`2011` = sum(`2011`), `2012` = sum(`2012`), `2013` = sum(`2013`), `2014` = sum(`2014`), `2015` = sum(`2015`), `2016` = sum(`2016`))%>% print()
+
+jayden_name_table = knitr::kable(jayden_pop_over_time) 
 ```
