@@ -60,7 +60,7 @@ rainfall_total_2017 = yearly_precip_data %>% filter(year == 2017) %>% pull(sum_p
 rainfall_total_2018 = yearly_precip_data %>% filter(year == 2018) %>% pull(sum_precipitation)
 ```
 
-  The data in Problem 1 is collected by the Trash Wheel in Baltimore, Maryland. The Wheel collects waste from the harbor, after which the city collects and incinerates the trash as a method of generating electricity for the city. The amount of rainfall is a determinant of the volume of trash collected. There are `size ` observations within the Trash Wheel Data, spanning every month since May of 2014. The average number of tons brought in by the Trash Wheel is `avg_trash `. The total rainfall in the year 2017 was `rainfall_total_2017 `, while the total yearly percipitation for 2018 was `rainfall_total_2018 `. The data also contains information on the different types of trash picked up by the Trash Wheel. Objects such as cigarette butts and sports balls are counted when clearing trash from the water. During 2017 the median number of sports balls Mr. Trash Wheel picked up was `median_sports_balls `.      
+  The data in Problem 1 is collected by the Trash Wheel in Baltimore, Maryland. The Wheel collects waste from the harbor, after which the city collects and incinerates the trash as a method of generating electricity for the city. The amount of rainfall is a determinant of the volume of trash collected. There are `size ` observations within the Trash Wheel Data, spanning every month since May of 2014. The average number of tons brought in by the Trash Wheel is `avg_trash `. The total precipitation in the year 2017 was `rainfall_total_2017 `, while the total yearly precipitation for 2018 was `rainfall_total_2018 `. The data also contains information on the different types of trash picked up by the Trash Wheel. Objects such as cigarette butts and sports balls are counted when clearing trash from the water. During 2017 the median number of sports balls Mr. Trash Wheel picked up was `median_sports_balls `.      
 
 
 ## Problem 2 ##
@@ -76,19 +76,21 @@ pols_data = pols_data %>% separate(mon, into = c('year', 'month', 'day'), sep = 
 
 # Clean snp_data #
 
-snp_data = snp_data %>% separate(date, into = c('month', 'day', 'year'), sep = '/') %>% mutate(year = as.numeric(year), month = as.numeric(month), day = as.numeric(day)) %>% select(year, month, close) %>% mutate(month  = month.abb[month]) %>% arrange(year, month) 
+snp_data = snp_data %>% separate(date, into = c('month', 'day', 'year'), sep = '/') %>% mutate(year = as.numeric(year), month = as.numeric(month), day = as.numeric(day)) %>% select(year, month, close) %>%  arrange(year, month) %>% mutate(month  = month.abb[month]) 
 
 # Clean unemployment_data #
 
-unemployment_data = unemployment_data %>% gather(Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec, key = 'month', value = 'rate') %>% arrange(Year, month) %>% rename(year = Year, unemp_rate = rate)
+unemployment_data = unemployment_data %>% gather(Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec, key = 'month', value = 'rate') %>% group_by(Year, month) %>% arrange(Year) %>% rename(year = Year, unemp_rate = rate)
 
-# Merge the Data Frames #
+# Merge the Data Frames/ preserve order #
 
 pol_snp_data = merge(pols_data, snp_data, by = c('year', 'month'))
-total_538_data = merge(pol_snp_data, unemployment_data, by = c('year', 'month'))
+total_538_data = merge(pol_snp_data, unemployment_data, by = c('year', 'month')) 
 
 ```
 
+  
+  The data table is comprised of data taken from three sources, the first a categorization of political offices by their party membership, the second a list of S&P market values at the close of each month, and finally the percentage of unemployment by month. All of these data sets contain information from January 1950 or prior. The resulting data table is 786 rows long 11 columns long , and is organized by year and month columns. 
 
 
 ## Problem 3 ##
