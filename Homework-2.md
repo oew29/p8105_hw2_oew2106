@@ -1,0 +1,285 @@
+p8105\_hw2\_oew2106
+================
+Olivia Wagner
+9/27/2019
+
+## Problem 1
+
+``` r
+# Read in Data Set #
+Trash_Wheel_Data = readxl::read_excel('./Problem 1/Trash-Wheel-Collection-Totals-8-6-19.xlsx', col_names = TRUE, na = '', range = 'A2:N406')
+
+# alter the names of the columns to snake format#
+Trash_Wheel_Data = janitor::clean_names(Trash_Wheel_Data)
+
+
+# filter out the results without dumpster information, and round the number of sports balls found #
+Trash_Wheel_Data = Trash_Wheel_Data %>% 
+  filter(!is.na(dumpster)) %>% 
+  mutate(sports_balls = as.integer(sports_balls)) 
+
+
+# Summary of the Data #
+size = nrow(Trash_Wheel_Data)
+
+avg_trash_by_month = Trash_Wheel_Data %>% 
+  group_by(month, year) %>% 
+  summarise(n = n(), total_weight = sum(weight_tons))
+
+avg_trash = mean(pull(avg_trash_by_month, total_weight))
+
+median_sports_balls = median(pull(Trash_Wheel_Data, sports_balls))
+```
+
+``` r
+# Extract 2017/2018 Data #
+precipitation_2018 = readxl::read_excel('./Problem 1/Trash-Wheel-Collection-Totals-8-6-19.xlsx', sheet = 5, col_names = TRUE, na = '', range = 'A2:B14') 
+
+precipitation_2017 = readxl::read_excel('./Problem 1/Trash-Wheel-Collection-Totals-8-6-19.xlsx', sheet = 6, col_names = TRUE, na = '', range = 'A2:B14')
+
+# Alter Data Sets #
+precipitation_2018 = precipitation_2018 %>% 
+  mutate(year = '2018') %>% 
+  filter(!is.na(Total))
+
+precipitation_2017 = precipitation_2017 %>% 
+  mutate(year = '2017') %>% 
+  filter(!is.na(Total))
+
+# Combine Data Sets #
+precipitation_data = rbind(precipitation_2017, precipitation_2018)
+
+# Alter the Month from numerical to character representation #
+precipitation_data = precipitation_data %>% 
+  mutate(month = month.name[Month], total = Total) %>% 
+  select(-Total, -Month) 
+
+
+# Data Summary #
+
+yearly_precip_data = precipitation_data %>% 
+  group_by(year) %>% 
+  summarize(sum_precipitation = sum(total))
+
+
+rainfall_total_2017 = yearly_precip_data %>% 
+  filter(year == 2017) %>% 
+  pull(sum_precipitation)
+
+
+rainfall_total_2018 = yearly_precip_data %>% 
+  filter(year == 2018) %>% 
+  pull(sum_precipitation)
+```
+
+The data in Problem 1 is collected by the Trash Wheel in Baltimore,
+Maryland. The Wheel collects waste from the harbor, after which the city
+collects and incinerates the trash as a method of generating electricity
+for the city. The amount of rainfall is a determinant of the volume of
+trash collected. There are `size` observations within the Trash Wheel
+Data, spanning every month since May of 2014. The average number of tons
+brought in by the Trash Wheel is `avg_trash`. The total precipitation in
+the year 2017 was `rainfall_total_2017`, while the total yearly
+precipitation for 2018 was `rainfall_total_2018`. The data also contains
+information on the different types of trash picked up by the Trash
+Wheel. Objects such as cigarette butts and sports balls are counted when
+clearing trash from the water. During 2017 the median number of sports
+balls Mr. Trash Wheel picked up was `median_sports_balls`.
+
+## Problem 2
+
+``` r
+# Read in Data Set #
+pols_data = read_csv('./Problem 2/fivethirtyeight_datasets/pols-month.csv')
+```
+
+    ## Parsed with column specification:
+    ## cols(
+    ##   mon = col_date(format = ""),
+    ##   prez_gop = col_double(),
+    ##   gov_gop = col_double(),
+    ##   sen_gop = col_double(),
+    ##   rep_gop = col_double(),
+    ##   prez_dem = col_double(),
+    ##   gov_dem = col_double(),
+    ##   sen_dem = col_double(),
+    ##   rep_dem = col_double()
+    ## )
+
+``` r
+snp_data = read_csv('./Problem 2/fivethirtyeight_datasets/snp.csv')
+```
+
+    ## Parsed with column specification:
+    ## cols(
+    ##   date = col_character(),
+    ##   close = col_double()
+    ## )
+
+``` r
+unemployment_data = read_csv('./Problem 2/fivethirtyeight_datasets/unemployment.csv')
+```
+
+    ## Parsed with column specification:
+    ## cols(
+    ##   Year = col_double(),
+    ##   Jan = col_double(),
+    ##   Feb = col_double(),
+    ##   Mar = col_double(),
+    ##   Apr = col_double(),
+    ##   May = col_double(),
+    ##   Jun = col_double(),
+    ##   Jul = col_double(),
+    ##   Aug = col_double(),
+    ##   Sep = col_double(),
+    ##   Oct = col_double(),
+    ##   Nov = col_double(),
+    ##   Dec = col_double()
+    ## )
+
+``` r
+# Clean pols_data #
+pols_data = pols_data %>% 
+  separate(mon, into = c('year', 'month', 'day'), sep = '-') %>% 
+  mutate(month = as.integer(month)) %>% 
+  mutate(month = month.abb[month]) %>% 
+  mutate(president = ifelse(prez_gop == 1, 'gop', 'dem')) %>% 
+  select(-prez_gop, -prez_dem, -day) 
+
+# Clean snp_data #
+
+snp_data = snp_data %>% 
+  separate(date, into = c('month', 'day', 'year'), sep = '/') %>% 
+  mutate(year = as.numeric(year), month = as.numeric(month), day = as.numeric(day)) %>% 
+  select(year, month, close) %>%  arrange(year, month) %>% 
+  mutate(month  = month.abb[month]) 
+
+# Clean unemployment_data #
+
+unemployment_data = unemployment_data %>% 
+  gather(Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec, key = 'month', value = 'rate') %>% 
+  group_by(Year, month) %>% arrange(Year) %>% 
+  rename(year = Year, unemp_rate = rate)
+
+# Merge the Data Frames/ Preserve Order #
+month_order = c('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep','Oct', 'Nov', 'Dec')
+
+pol_snp_data = merge(pols_data, snp_data, by = c('year', 'month'))
+
+total_538_data = merge(pol_snp_data, unemployment_data, by = c('year', 'month')) %>% 
+  mutate(month = factor(month, levels = month_order)) %>% 
+  arrange(year, month)
+```
+
+The data table is comprised of data taken from three sources, the first
+a categorization of political offices by their party membership, the
+second a list of S\&P market values at the close of each month, and
+finally the percentage of unemployment by month. All of these data sets
+contain information from January 1950 or prior, while the new data set
+begins in January of 1950. The resulting table is 786 rows long 11
+columns long, and is organized by year and month columns.
+
+## Problem 3
+
+``` r
+# Read in Data Set #
+
+name_data = read_csv('./Problem 3/Popular_Baby_Names.csv') 
+```
+
+    ## Parsed with column specification:
+    ## cols(
+    ##   `Year of Birth` = col_double(),
+    ##   Gender = col_character(),
+    ##   Ethnicity = col_character(),
+    ##   `Child's First Name` = col_character(),
+    ##   Count = col_double(),
+    ##   Rank = col_double()
+    ## )
+
+``` r
+name_data = janitor::clean_names(name_data)
+
+
+# Alter Ethnicity category to streamline formatting #
+
+name_data = name_data %>% 
+  mutate(ethnicity = replace(ethnicity, ethnicity == 'ASIAN AND PACI', 'ASIAN AND PACIFIC ISLANDER')) %>% 
+  mutate(ethnicity = replace(ethnicity, ethnicity == 'BLACK NON HISP', 'BLACK NON HISPANIC')) %>% 
+  mutate(ethnicity = replace(ethnicity, ethnicity == 'WHITE NON HISP', 'WHITE NON HISPANIC'))
+
+# Alter the Name cateogry to ensure the same formatting #
+
+name_data = name_data %>% 
+  mutate(childs_first_name = tolower(childs_first_name)) %>%
+  distinct() %>%
+  group_by(year_of_birth, gender, ethnicity, childs_first_name, rank) %>% 
+  summarize(count = sum(count)) %>% 
+  arrange(desc(year_of_birth),ethnicity, gender, desc(count))
+
+
+# Olivia name table #
+
+olivia_name = name_data %>% filter(childs_first_name == 'olivia')
+
+olivia_pop_over_time = spread(olivia_name, key = 'year_of_birth', value = 'rank', fill = 0) %>% 
+  group_by(ethnicity) %>% 
+  summarize(`2011` = sum(`2011`), `2012` = sum(`2012`), `2013` = sum(`2013`), `2014` = sum(`2014`), `2015` = sum(`2015`), `2016` = sum(`2016`)) 
+
+
+olivia_name_table = knitr::kable(olivia_pop_over_time, 
+                                 caption = 'Rank of the Name Olivia by Year') 
+olivia_name_table
+```
+
+| ethnicity                  | 2011 | 2012 | 2013 | 2014 | 2015 | 2016 |
+| :------------------------- | ---: | ---: | ---: | ---: | ---: | ---: |
+| ASIAN AND PACIFIC ISLANDER |    4 |    3 |    3 |    1 |    1 |    1 |
+| BLACK NON HISPANIC         |   10 |    8 |    6 |    8 |    4 |    8 |
+| HISPANIC                   |   18 |   22 |   22 |   16 |   16 |   13 |
+| WHITE NON HISPANIC         |    2 |    4 |    1 |    1 |    1 |    1 |
+
+Rank of the Name Olivia by Year
+
+``` r
+# Jayden name table #
+
+jayden_name = name_data %>% 
+  filter(childs_first_name == 'jayden') 
+
+jayden_pop_over_time = spread(jayden_name, key = 'year_of_birth', value = 'rank', fill = 0) %>% 
+  group_by(ethnicity) %>% 
+  summarize(`2011` = sum(`2011`), `2012` = sum(`2012`), `2013` = sum(`2013`), `2014` = sum(`2014`), `2015` = sum(`2015`), `2016` = sum(`2016`))
+
+
+jayden_name_table = knitr::kable(jayden_pop_over_time,
+                                 caption = 'Rank of the Name Jayden by Year') 
+jayden_name_table
+```
+
+| ethnicity                  | 2011 | 2012 | 2013 | 2014 | 2015 | 2016 |
+| :------------------------- | ---: | ---: | ---: | ---: | ---: | ---: |
+| ASIAN AND PACIFIC ISLANDER |    2 |    2 |    1 |    1 |    1 |    5 |
+| BLACK NON HISPANIC         |    1 |    1 |    2 |    3 |   10 |   11 |
+| HISPANIC                   |    1 |    1 |    1 |    4 |    7 |    8 |
+| WHITE NON HISPANIC         |   68 |   74 |   78 |   77 |   78 |   91 |
+
+Rank of the Name Jayden by Year
+
+``` r
+# Male Scatterplot Rank V. Popularity #
+
+boys_names = name_data %>% 
+  filter(gender == 'MALE', ethnicity == 'WHITE NON HISPANIC', year_of_birth == 2016) %>% ungroup() %>% 
+  group_by(childs_first_name, rank) %>% 
+  summarize(count = sum(count)) 
+
+
+ggplot(data = boys_names) +
+  geom_point(mapping = aes(x = rank, y = count)) +
+                 ggtitle('NYC White Non Hispanic Boys Names in 2016')+
+                 ylab('Number of Children')+
+                 xlab('Rank of Name')
+```
+
+![](Homework-2_files/figure-gfm/problem%203,%20Data%20set%201-1.png)<!-- -->
